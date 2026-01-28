@@ -10,7 +10,7 @@
     <nav>
         <div class="nav-container">
             <a href="index.html" class="logo">AskAdit</a>
-            <ul class="nav-links">
+            <ul class="nav-links" id="navLinks">
                 <li><a href="countries.html">Countries</a></li>
                 <li><a href="outdoors.html">Outdoors</a></li>
                 <li><a href="quotes.html">Quotes</a></li>
@@ -25,23 +25,39 @@
             <p class="section-description">A curated collection of meaningful, clever, or motivating quotes that have stuck with me, along with brief reflections on why they matter.</p>
         </div>
 
-        <div class="quote-card">
-            <div class="quote-text">"The journey of a thousand miles begins with a single step."</div>
-            <div class="quote-attribution">— Lao Tzu</div>
-            <div class="quote-reflection">A reminder that every big adventure starts with a single step. I think about this whenever I'm procrastinating on something that feels too big to tackle. Just start.</div>
-        </div>
-
-        <div class="quote-card">
-            <div class="quote-text">"Not all those who wander are lost."</div>
-            <div class="quote-attribution">— J.R.R. Tolkien</div>
-            <div class="quote-reflection">This one hits different when you're actually lost on a trail. But more seriously, it's a beautiful reminder that exploration and curiosity are valid life paths, not just detours.</div>
-        </div>
-
-        <div class="quote-card">
-            <div class="quote-text">"The real voyage of discovery consists not in seeking new landscapes, but in having new eyes."</div>
-            <div class="quote-attribution">— Marcel Proust</div>
-            <div class="quote-reflection">Travel isn't just about going places—it's about learning to see differently. The same principle applies to revisiting familiar places or ideas with fresh perspective.</div>
-        </div>
+        <div id="quotesList"></div>
     </div>
+
+    <script src="content.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // Add admin link if logged in
+        if (isLoggedIn()) {
+            const navLinks = document.getElementById('navLinks');
+            const adminLink = document.createElement('li');
+            adminLink.innerHTML = '<a href="admin.html">Admin</a>';
+            navLinks.appendChild(adminLink);
+        }
+
+        // Load quotes
+        const topics = getTopics('quotes');
+        const quotesList = document.getElementById('quotesList');
+
+        if (topics.length === 0) {
+            quotesList.innerHTML = '<p style="text-align: center; color: var(--text-forest-light);">No quotes yet.</p>';
+        } else {
+            topics.forEach(topic => {
+                const card = document.createElement('div');
+                card.className = 'quote-card';
+                const preview = topic.reflection ? topic.reflection.substring(0, 150) + (topic.reflection.length > 150 ? '...' : '') : '';
+                card.innerHTML = `
+                    <div class="quote-text">"${topic.quote}"</div>
+                    <div class="quote-attribution">— ${topic.attribution}</div>
+                    ${preview ? `<div class="quote-reflection">${preview}</div>` : ''}
+                `;
+                quotesList.appendChild(card);
+            });
+        }
+    </script>
 </body>
 </html>

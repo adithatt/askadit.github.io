@@ -10,7 +10,7 @@
     <nav>
         <div class="nav-container">
             <a href="index.html" class="logo">AskAdit</a>
-            <ul class="nav-links">
+            <ul class="nav-links" id="navLinks">
                 <li><a href="countries.html">Countries</a></li>
                 <li><a href="outdoors.html">Outdoors</a></li>
                 <li><a href="quotes.html">Quotes</a></li>
@@ -25,23 +25,41 @@
             <p class="section-description">Places I've visited, studied, or simply found fascinating. Each entry is a snapshot of culture, history, food, or an insight that stuck with me.</p>
         </div>
 
-        <div class="entries-grid">
-            <div class="entry-card">
-                <img src="https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=800&h=600&fit=crop" alt="Japan" class="entry-image">
-                <div class="entry-content">
-                    <h3 class="entry-title">Japan</h3>
-                    <p class="entry-preview">Where ancient temples meet neon-lit streets, and every meal feels like a ceremony. The attention to detail in everything—from train schedules to tea ceremonies—taught me that excellence is in the small things.</p>
-                </div>
-            </div>
-
-            <div class="entry-card">
-                <img src="https://images.unsplash.com/photo-1515542622106-78bda8ba0e5b?w=800&h=600&fit=crop" alt="Iceland" class="entry-image">
-                <div class="entry-content">
-                    <h3 class="entry-title">Iceland</h3>
-                    <p class="entry-preview">A land of fire and ice where nature reminds you how small you are. The midnight sun in summer and the northern lights in winter—both experiences that reset your sense of time and place.</p>
-                </div>
-            </div>
-        </div>
+        <div class="entries-grid" id="topicsGrid"></div>
     </div>
+
+    <script src="content.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // Add admin link if logged in
+        if (isLoggedIn()) {
+            const navLinks = document.getElementById('navLinks');
+            const adminLink = document.createElement('li');
+            adminLink.innerHTML = '<a href="admin.html">Admin</a>';
+            navLinks.appendChild(adminLink);
+        }
+
+        // Load topics
+        const topics = getTopics('countries');
+        const topicsGrid = document.getElementById('topicsGrid');
+
+        if (topics.length === 0) {
+            topicsGrid.innerHTML = '<p style="text-align: center; color: var(--text-forest-light);">No topics yet.</p>';
+        } else {
+            topics.forEach(topic => {
+                const card = document.createElement('a');
+                card.href = `topic.html?section=countries&id=${topic.id}`;
+                card.className = 'entry-card';
+                card.innerHTML = `
+                    ${topic.image ? `<img src="${topic.image}" alt="${topic.title}" class="entry-image">` : ''}
+                    <div class="entry-content">
+                        <h3 class="entry-title">${topic.title}</h3>
+                        ${topic.preview ? `<p class="entry-preview">${topic.preview}</p>` : ''}
+                    </div>
+                `;
+                topicsGrid.appendChild(card);
+            });
+        }
+    </script>
 </body>
 </html>

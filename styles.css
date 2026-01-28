@@ -238,12 +238,6 @@ nav {
     border-left: 3px solid var(--text-forest);
     padding: 2rem;
     margin-bottom: 2rem;
-    transition: all 0.2s ease;
-}
-
-.quote-card:hover {
-    background-color: var(--hover-bg);
-    padding-left: 2.5rem;
 }
 
 .quote-text {

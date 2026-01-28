@@ -9,8 +9,8 @@
 <body>
     <nav>
         <div class="nav-container">
-            <a href="index.html" class="logo">AskAdit</a>
-            <ul class="nav-links">
+            <a href="index.html" class="logo">Ask Adit</a>
+            <ul class="nav-links" id="navLinks">
                 <li><a href="countries.html">Countries</a></li>
                 <li><a href="outdoors.html">Outdoors</a></li>
                 <li><a href="quotes.html">Quotes</a></li>
@@ -41,5 +41,16 @@
             <h2>Guides</h2>
         </a>
     </div>
+
+    <script src="auth.js"></script>
+    <script>
+        // Add admin link if logged in
+        if (isLoggedIn()) {
+            const navLinks = document.getElementById('navLinks');
+            const adminLink = document.createElement('li');
+            adminLink.innerHTML = '<a href="admin.html">Admin</a>';
+            navLinks.appendChild(adminLink);
+        }
+    </script>
 </body>
 </html>

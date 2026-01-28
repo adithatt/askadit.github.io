@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Topic — AskAdit</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .topic-detail {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .topic-detail-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+        }
+
+        .topic-detail-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .topic-detail-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-forest);
+            margin-top: 2rem;
+        }
+
+        .back-link {
+            margin-bottom: 2rem;
+        }
+
+        .back-link a {
+            color: var(--text-forest-light);
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            color: var(--text-forest);
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo">AskAdit</a>
+            <ul class="nav-links">
+                <li><a href="countries.html">Countries</a></li>
+                <li><a href="outdoors.html">Outdoors</a></li>
+                <li><a href="quotes.html">Quotes</a></li>
+                <li><a href="guides.html">Guides</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="topic-detail" id="topicContent">
+        <div class="back-link">
+            <a href="#" id="backLink">← Back</a>
+        </div>
+        <div id="topicDetail"></div>
+    </div>
+
+    <script src="content.js"></script>
+    <script>
+        // Get section and topicId from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const section = urlParams.get('section');
+        const topicId = urlParams.get('id');
+
+        // Set back link
+        document.getElementById('backLink').href = section ? `${section}.html` : 'index.html';
+
+        if (section && topicId) {
+            const topic = getTopic(section, topicId);
+            if (topic) {
+                const topicDetail = document.getElementById('topicDetail');
+                
+                if (section === 'quotes') {
+                    topicDetail.innerHTML = `
+                        <div class="quote-card" style="border-left: 3px solid var(--text-forest); padding: 2rem;">
+                            <div class="quote-text">"${topic.quote}"</div>
+                            <div class="quote-attribution">— ${topic.attribution}</div>
+                            <div class="quote-reflection">${topic.reflection}</div>
+                        </div>
+                    `;
+                } else {
+                    let imageHtml = '';
+                    if (topic.image) {
+                        imageHtml = `<img src="${topic.image}" alt="${topic.title}" class="topic-detail-image">`;
+                    }
+                    
+                    topicDetail.innerHTML = `
+                        ${imageHtml}
+                        <h1 class="topic-detail-title">${topic.title}</h1>
+                        <div class="topic-detail-content">${topic.content || topic.preview}</div>
+                    `;
+                }
+            } else {
+                document.getElementById('topicDetail').innerHTML = '<p>Topic not found.</p>';
+            }
+        } else {
+            document.getElementById('topicDetail').innerHTML = '<p>Invalid topic link.</p>';
+        }
+    </script>
+</body>
+</html>

@@ -10,7 +10,7 @@
     <nav>
         <div class="nav-container">
             <a href="index.html" class="logo">AskAdit</a>
-            <ul class="nav-links">
+            <ul class="nav-links" id="navLinks">
                 <li><a href="countries.html">Countries</a></li>
                 <li><a href="outdoors.html">Outdoors</a></li>
                 <li><a href="quotes.html">Quotes</a></li>
@@ -25,23 +25,41 @@
             <p class="section-description">Thoughts on nature, hiking, landscapes, weather, and outdoor experiences. Emphasis on wonder, practical wisdom, and appreciation for the natural world.</p>
         </div>
 
-        <div class="entries-grid">
-            <div class="entry-card">
-                <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop" alt="Mountain Trail" class="entry-image">
-                <div class="entry-content">
-                    <h3 class="entry-title">The Art of Getting Lost</h3>
-                    <p class="entry-preview">Sometimes the best trails are the ones you never planned to take. Getting lost isn't a failure—it's an opportunity to discover something you didn't know you were looking for.</p>
-                </div>
-            </div>
-
-            <div class="entry-card">
-                <img src="https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800&h=600&fit=crop" alt="Forest" class="entry-image">
-                <div class="entry-content">
-                    <h3 class="entry-title">Why Rain Makes Everything Better</h3>
-                    <p class="entry-preview">There's something about hiking in the rain that clears your head. The sound, the smell, the way everything looks more alive. Plus, you get the trails all to yourself.</p>
-                </div>
-            </div>
-        </div>
+        <div class="entries-grid" id="topicsGrid"></div>
     </div>
+
+    <script src="content.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // Add admin link if logged in
+        if (isLoggedIn()) {
+            const navLinks = document.getElementById('navLinks');
+            const adminLink = document.createElement('li');
+            adminLink.innerHTML = '<a href="admin.html">Admin</a>';
+            navLinks.appendChild(adminLink);
+        }
+
+        // Load topics
+        const topics = getTopics('outdoors');
+        const topicsGrid = document.getElementById('topicsGrid');
+
+        if (topics.length === 0) {
+            topicsGrid.innerHTML = '<p style="text-align: center; color: var(--text-forest-light);">No topics yet.</p>';
+        } else {
+            topics.forEach(topic => {
+                const card = document.createElement('a');
+                card.href = `topic.html?section=outdoors&id=${topic.id}`;
+                card.className = 'entry-card';
+                card.innerHTML = `
+                    ${topic.image ? `<img src="${topic.image}" alt="${topic.title}" class="entry-image">` : ''}
+                    <div class="entry-content">
+                        <h3 class="entry-title">${topic.title}</h3>
+                        ${topic.preview ? `<p class="entry-preview">${topic.preview}</p>` : ''}
+                    </div>
+                `;
+                topicsGrid.appendChild(card);
+            });
+        }
+    </script>
 </body>
 </html>

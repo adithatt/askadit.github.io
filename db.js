@@ -103,7 +103,7 @@ function seedDefaultData(database) {
     if (topicCount.length && topicCount[0].values[0][0] > 0) return;
 
     const defaultTopics = [
-        ['japan', 'countries', 'Japan', 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=800&h=600&fit=crop', 'Where ancient temples meet neon-lit streets, and every meal feels like a ceremony.', 'Where ancient temples meet neon-lit streets, and every meal feels like a ceremony. The attention to detail in everything—from train schedules to tea ceremonies—taught me that excellence is in the small things.'],
+        ['usa', 'countries', 'Japan', 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=800&h=600&fit=crop', 'Where ancient temples meet neon-lit streets, and every meal feels like a ceremony.', 'Where ancient temples meet neon-lit streets, and every meal feels like a ceremony. The attention to detail in everything—from train schedules to tea ceremonies—taught me that excellence is in the small things.'],
         ['iceland', 'countries', 'Iceland', 'https://images.unsplash.com/photo-1515542622106-78bda8ba0e5b?w=800&h=600&fit=crop', 'A land of fire and ice where nature reminds you how small you are.', 'A land of fire and ice where nature reminds you how small you are. The midnight sun in summer and the northern lights in winter—both experiences that reset your sense of time and place.'],
         ['getting-lost', 'outdoors', 'The Art of Getting Lost', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop', 'Sometimes the best trails are the ones you never planned to take.', 'Sometimes the best trails are the ones you never planned to take. Getting lost isn\'t a failure—it\'s an opportunity to discover something you didn\'t know you were looking for.'],
         ['rain-hiking', 'outdoors', 'Why Rain Makes Everything Better', 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800&h=600&fit=crop', 'There\'s something about hiking in the rain that clears your head.', 'There\'s something about hiking in the rain that clears your head. The sound, the smell, the way everything looks more alive. Plus, you get the trails all to yourself.'],
@@ -131,6 +131,21 @@ function seedDefaultData(database) {
 async function initDb() {
     if (db) return db;
     SQL = await loadSqlJs();
+    
+    var tryGistFirst = typeof window.hasGistConfig === 'function' && window.hasGistConfig() && typeof window.syncFromGist === 'function';
+    if (tryGistFirst) {
+        try {
+            await window.syncFromGist();
+            var saved = await loadDbFromIndexedDB();
+            if (saved && saved.length) {
+                db = new SQL.Database(saved);
+                return db;
+            }
+        } catch (err) {
+            console.warn('Failed to sync from Gist, using local DB:', err);
+        }
+    }
+    
     const saved = await loadDbFromIndexedDB();
     if (saved && saved.length) {
         db = new SQL.Database(saved);
@@ -175,7 +190,15 @@ function migrateFromLocalStorage(database) {
 function persistDb() {
     if (!db) return Promise.resolve();
     const data = db.export();
-    return saveDbToIndexedDB(data);
+    var p = saveDbToIndexedDB(data);
+    if (typeof window.syncToGist === 'function' && typeof window.hasGistConfig === 'function' && window.hasGistConfig()) {
+        p = p.then(function () {
+            return window.syncToGist().catch(function (err) {
+                console.warn('Sync to Gist failed:', err);
+            });
+        });
+    }
+    return p;
 }
 
 // --- Topics (countries, outdoors, guides) ---

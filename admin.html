@@ -219,6 +219,23 @@
             <a href="#" data-section="guides" onclick="loadSection('guides'); return false;">Guides</a>
         </div>
 
+        <div style="margin-bottom: 2rem; padding: 1.5rem; border: 1px solid var(--border-soft); border-radius: 4px; background: var(--hover-bg);">
+            <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Sync Settings</h3>
+            <p style="font-size: 0.9rem; color: var(--text-forest-light); margin-bottom: 1rem;">
+                Enable sync to share your database across all devices. You'll need a GitHub Personal Access Token.
+            </p>
+            <div id="syncStatus" style="margin-bottom: 1rem;"></div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button onclick="setupGistSync()" class="btn-small">Setup GitHub Sync</button>
+                <button onclick="manualSync()" class="btn-small">Sync Now</button>
+                <button onclick="downloadDb()" class="btn-small">Export Database</button>
+                <label style="cursor: pointer;" class="btn-small">
+                    Import Database
+                    <input type="file" accept=".json" onchange="handleFileImport(event)" style="display: none;">
+                </label>
+            </div>
+        </div>
+
         <div id="addTopicBtn" style="margin-bottom: 2rem;">
             <button onclick="showTopicForm()" class="btn-primary">Add Topic</button>
         </div>
@@ -274,9 +291,13 @@
     <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.2/dist/sql-wasm.js"></script>
     <script src="db.js"></script>
     <script src="content.js"></script>
+    <script src="sync.js"></script>
     <script src="admin.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () { initAdmin(); });
+        document.addEventListener('DOMContentLoaded', function () { 
+            initAdmin();
+            updateSyncStatus();
+        });
     </script>
 </body>
 </html>

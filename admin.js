@@ -229,3 +229,56 @@ function adminLogout() {
         window.location.href = 'login.html';
     }
 }
+
+function updateSyncStatus() {
+    var statusEl = document.getElementById('syncStatus');
+    if (!statusEl) return;
+    
+    if (typeof hasGistConfig === 'function' && hasGistConfig()) {
+        statusEl.innerHTML = '<span style="color: var(--text-forest-light);">✓ Sync enabled (Gist ID: ' + getGistId().substring(0, 8) + '...)</span>';
+    } else {
+        statusEl.innerHTML = '<span style="color: var(--text-forest-light);">Sync not configured. Click "Setup GitHub Sync" to enable.</span>';
+    }
+}
+
+function setupGistSync() {
+    var token = prompt('Enter your GitHub Personal Access Token:\n\nCreate one at: https://github.com/settings/tokens\n\nRequired scopes: gist');
+    if (!token) return;
+    
+    token = token.trim();
+    if (!token) {
+        alert('Token cannot be empty.');
+        return;
+    }
+    
+    if (confirm('This will create a new Gist and sync your current database. Continue?')) {
+        createGist(token).then(function (gistId) {
+            alert('Sync enabled! Gist created: ' + gistId + '\n\nYour database will now sync automatically when you make changes.');
+            updateSyncStatus();
+        }).catch(function (err) {
+            alert('Failed to setup sync: ' + err.message);
+            console.error(err);
+        });
+    }
+}
+
+function manualSync() {
+    if (typeof hasGistConfig === 'function' && hasGistConfig()) {
+        syncFromGist().then(function () {
+            alert('Synced from GitHub! Refreshing...');
+            window.location.reload();
+        }).catch(function (err) {
+            alert('Sync failed: ' + err.message);
+            console.error(err);
+        });
+    } else {
+        alert('Sync not configured. Please set it up first.');
+    }
+}
+
+function handleFileImport(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    uploadDb(file);
+    event.target.value = '';
+}

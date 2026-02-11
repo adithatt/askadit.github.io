@@ -1,9 +1,31 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import Nav from "@/components/Nav";
-import { getTopics } from "@/lib/db";
+import { supabase } from "@/lib/supabase";
+import type { Topic } from "@/lib/supabase";
 
 export default function CountriesPage() {
-  const topics = getTopics("countries");
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+    void supabase
+      .from("topics")
+      .select("id, section, title, photo, preview, content")
+      .eq("section", "countries")
+      .then(({ data }) => {
+        setTopics(data ?? []);
+        setLoading(false);
+      })
+      .then(undefined, () => setLoading(false));
+  }, []);
+
   return (
     <>
       <Nav />
@@ -17,7 +39,11 @@ export default function CountriesPage() {
           </p>
         </div>
         <div className="entries-grid">
-          {topics.length === 0 ? (
+          {loading ? (
+            <p style={{ textAlign: "center", color: "var(--text-forest-light)" }}>
+              Loading…
+            </p>
+          ) : topics.length === 0 ? (
             <p style={{ textAlign: "center", color: "var(--text-forest-light)" }}>
               No topics yet.
             </p>
@@ -25,7 +51,7 @@ export default function CountriesPage() {
             topics.map((topic) => (
               <Link
                 key={topic.id}
-                href={`/topic/countries/${topic.id}/`}
+                href={`/topic?section=countries&id=${encodeURIComponent(topic.id)}`}
                 className="entry-card"
               >
                 {topic.photo ? (

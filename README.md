@@ -1,38 +1,67 @@
 # Ask Adit
 
-A Next.js app for a personal collection of travel notes, outdoors thoughts, guides, and quotes. Built for **GitHub Pages** at **askadit.com**.
+A Next.js app for a personal collection of travel notes, outdoors thoughts, guides, and quotes. Built for **GitHub Pages** at **askadit.com**. **Admin works everywhere** (including on the live site) via Supabase auth and database.
 
 ## Stack
 
 - **Next.js 14** (App Router, static export)
-- **SQLite** (via `better-sqlite3`) at build time — content is baked into the static site
+- **Supabase** — Postgres database + auth; content and admin login work on the static site
 - **GitHub Actions** — build and deploy to GitHub Pages on every push to `main`
+
+## Setup
+
+### 1. Supabase project
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. In the SQL Editor, run the contents of **`supabase/schema.sql`** (creates `topics` and `quotes` tables, RLS, and seed data).
+3. In **Authentication → Users**, add a user (email + password) for admin login.
+4. In **Project Settings → API**, copy the **Project URL** and **anon public** key.
+
+### 2. Environment variables
+
+Create **`.env.local`** (for local dev) and add your Supabase keys to the **GitHub repo** (Settings → Secrets and variables → Actions) so the static site can talk to Supabase from the browser:
+
+- `NEXT_PUBLIC_SUPABASE_URL` — Supabase project URL  
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase anon/public key  
+
+For GitHub Pages, these must be available at **build time** so they’re baked into the client bundle. Add them as **repository variables** (or **Actions variables**) and reference them in the deploy workflow when running `npm run build` (e.g. pass them as env to the build step).
+
+### 3. GitHub Actions (build with env)
+
+In **`.github/workflows/deploy.yml`**, ensure the build step has access to the Supabase env vars. For example:
+
+```yaml
+- name: Build
+  run: npm run build
+  env:
+    NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+```
+
+Add **Settings → Secrets and variables → Actions → Variables**: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
 ## Local development
 
 ```bash
+cp .env.example .env.local   # add your Supabase URL and anon key
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Admin and login work locally (with API routes); to get them back for local use you’d need to restore the API routes and run a Node server.
+Open [http://localhost:3000](http://localhost:3000). Log in with your Supabase user to use Admin.
 
 ## Deploy to askadit.com (GitHub Pages)
 
-1. **Use GitHub Actions for Pages**  
-   In the repo: **Settings → Pages → Build and deployment → Source**: choose **GitHub Actions**.
+1. **Pages source**  
+   **Settings → Pages → Build and deployment → Source**: **GitHub Actions**.
 
 2. **Push to `main`**  
-   Each push to `main` runs the workflow: it builds the static export, adds `CNAME` for askadit.com, and deploys to GitHub Pages. With DNS already pointing to GitHub Pages, the site will be live at **https://askadit.com**.
+   Each push runs the workflow, builds the static export (with Supabase env vars), adds `CNAME` for askadit.com, and deploys. The site is live at **https://askadit.com**.
 
-Content is generated at build time from the seeded SQLite data. To change content, update the seed in `lib/db.ts` (or add a build step that reads from another source) and push; the next run will publish the new content.
+3. **Admin on the live site**  
+   Go to **https://askadit.com/login/** and sign in with your Supabase email/password. The Admin link appears in the nav when logged in; edits are stored in Supabase and show up immediately.
 
 ## Scripts
 
-- `npm run dev` — local dev server (no static export)
+- `npm run dev` — local dev server  
 - `npm run build` — static export into `out/`
-- `npm start` — not used for Pages; use the workflow deploy instead
-
-## Note on admin
-
-The Admin and Login pages are included in the static export but **do not work on GitHub Pages** (no backend). They are only functional when running the app locally with a server and API (e.g. `npm run dev` with API routes restored).

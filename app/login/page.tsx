@@ -4,32 +4,28 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
 import Nav from "@/components/Nav";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    }).catch(() => null);
-    if (!res?.ok) {
-      setError("Admin is only available when running locally (npm run dev).");
+    if (!supabase) {
+      setError("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.");
       return;
     }
-    const data = await res.json();
-    if (data.success) {
-      router.push("/admin/");
-      router.refresh();
-    } else {
-      setError("Invalid username or password");
+    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+    if (err) {
+      setError(err.message || "Invalid email or password");
+      return;
     }
+    router.push("/admin/");
+    router.refresh();
   }
 
   return (
@@ -46,12 +42,12 @@ export default function LoginPage() {
         }}
       >
         <h2 style={{ textAlign: "center", marginBottom: "2rem", fontSize: "2rem" }}>
-          Login
+          Admin Login
         </h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group" style={{ marginBottom: "1.5rem" }}>
             <label
-              htmlFor="username"
+              htmlFor="email"
               style={{
                 display: "block",
                 marginBottom: "0.5rem",
@@ -59,13 +55,13 @@ export default function LoginPage() {
                 fontSize: "0.95rem",
               }}
             >
-              Username
+              Email
             </label>
             <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
               style={{
                 width: "100%",

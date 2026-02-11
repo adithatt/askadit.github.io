@@ -1,9 +1,30 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import Nav from "@/components/Nav";
-import { getQuotes } from "@/lib/db";
+import { supabase } from "@/lib/supabase";
+import type { Quote } from "@/lib/supabase";
 
 export default function QuotesPage() {
-  const quotes = getQuotes();
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+    void supabase
+      .from("quotes")
+      .select("id, quote_text, author, reflection")
+      .then(({ data }) => {
+        setQuotes(data ?? []);
+        setLoading(false);
+      })
+      .then(undefined, () => setLoading(false));
+  }, []);
+
   return (
     <>
       <Nav />
@@ -17,7 +38,11 @@ export default function QuotesPage() {
           </p>
         </div>
         <div className="entries-grid" style={{ gridTemplateColumns: "1fr" }}>
-          {quotes.length === 0 ? (
+          {loading ? (
+            <p style={{ textAlign: "center", color: "var(--text-forest-light)" }}>
+              Loading…
+            </p>
+          ) : quotes.length === 0 ? (
             <p style={{ textAlign: "center", color: "var(--text-forest-light)" }}>
               No quotes yet.
             </p>
@@ -25,9 +50,13 @@ export default function QuotesPage() {
             quotes.map((quote) => (
               <Link
                 key={quote.id}
-                href={`/topic/quotes/${quote.id}/`}
+                href={`/topic?section=quotes&id=${encodeURIComponent(quote.id)}`}
                 className="quote-card"
-                style={{ display: "block", textDecoration: "none", color: "inherit" }}
+                style={{
+                  display: "block",
+                  textDecoration: "none",
+                  color: "inherit",
+                }}
               >
                 <div className="quote-text">&ldquo;{quote.quote_text}&rdquo;</div>
                 <div className="quote-attribution">— {quote.author}</div>

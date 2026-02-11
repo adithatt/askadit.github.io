@@ -16,7 +16,9 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     if (!supabase) {
-      setError("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.");
+      setError(
+        "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and one of: NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY. Restart the dev server after changing .env.local."
+      );
       return;
     }
     const { error: err } = await supabase.auth.signInWithPassword({ email, password });

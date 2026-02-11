@@ -29,10 +29,19 @@
     </div>
 
     <script src="auth.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.2/dist/sql-wasm.js"></script>
     <script src="db.js"></script>
     <script src="content.js"></script>
     <script>
         (function () {
+            function withTimeout(p, ms) {
+                return Promise.race([
+                    p,
+                    new Promise(function (_, reject) {
+                        setTimeout(function () { reject(new Error('Timeout')); }, ms);
+                    })
+                ]);
+            }
             if (isLoggedIn()) {
                 var navLinks = document.getElementById('navLinks');
                 var adminLink = document.createElement('li');
@@ -40,7 +49,7 @@
                 navLinks.appendChild(adminLink);
             }
             var grid = document.getElementById('topicsGrid');
-            getTopics('guides').then(function (topics) {
+            withTimeout(getTopics('guides'), 12000).then(function (topics) {
                 grid.innerHTML = '';
                 if (!topics.length) {
                     grid.innerHTML = '<p style="text-align: center; color: var(--text-forest-light);">No topics yet.</p>';
@@ -56,7 +65,7 @@
                     grid.appendChild(card);
                 });
             }).catch(function (err) {
-                grid.innerHTML = '<p style="text-align: center; color: #d32f2f;">Failed to load topics.</p>';
+                grid.innerHTML = '<p style="text-align: center; color: var(--text-forest-light);">Content couldn\'t load. <a href="javascript:location.reload()">Refresh the page</a> to try again.</p>';
                 console.error(err);
             });
         })();

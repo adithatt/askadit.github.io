@@ -9,21 +9,34 @@ let db = null;
 let SQL = null;
 
 var SQL_JS_CDN = 'https://cdn.jsdelivr.net/npm/sql.js@1.10.2/dist/';
+var SQL_JS_TIMEOUT_MS = 15000;
 
 function loadSqlJs() {
     var config = { locateFile: function (file) { return SQL_JS_CDN + file; } };
+    var p;
     if (typeof window.initSqlJs === 'function') {
-        return window.initSqlJs(config);
+        p = window.initSqlJs(config);
+    } else {
+        p = new Promise(function (resolve, reject) {
+            var script = document.createElement('script');
+            script.src = SQL_JS_CDN + 'sql-wasm.js';
+            script.onload = function () {
+                if (typeof window.initSqlJs !== 'function') {
+                    reject(new Error('SQL.js did not load'));
+                    return;
+                }
+                window.initSqlJs(config).then(resolve).catch(reject);
+            };
+            script.onerror = function () { reject(new Error('SQL.js script failed to load')); };
+            document.head.appendChild(script);
+        });
     }
-    return new Promise(function (resolve, reject) {
-        var script = document.createElement('script');
-        script.src = SQL_JS_CDN + 'sql-wasm.js';
-        script.onload = function () {
-            window.initSqlJs(config).then(resolve).catch(reject);
-        };
-        script.onerror = reject;
-        document.head.appendChild(script);
-    });
+    return Promise.race([
+        p,
+        new Promise(function (_, reject) {
+            setTimeout(function () { reject(new Error('SQL.js load timeout')); }, SQL_JS_TIMEOUT_MS);
+        })
+    ]);
 }
 
 function openIndexedDB() {

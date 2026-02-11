@@ -66,10 +66,19 @@
         <div id="topicDetail"></div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.2/dist/sql-wasm.js"></script>
     <script src="db.js"></script>
     <script src="content.js"></script>
     <script>
         (function () {
+            function withTimeout(p, ms) {
+                return Promise.race([
+                    p,
+                    new Promise(function (_, reject) {
+                        setTimeout(function () { reject(new Error('Timeout')); }, ms);
+                    })
+                ]);
+            }
             var urlParams = new URLSearchParams(window.location.search);
             var section = urlParams.get('section');
             var topicId = urlParams.get('id');
@@ -80,7 +89,7 @@
                 return;
             }
             el.innerHTML = 'Loading…';
-            getTopic(section, topicId).then(function (topic) {
+            withTimeout(getTopic(section, topicId), 12000).then(function (topic) {
                 if (!topic) {
                     el.innerHTML = '<p>Topic not found.</p>';
                     return;
@@ -100,7 +109,7 @@
                     el.innerHTML = img + '<h1 class="topic-detail-title">' + title + '</h1><div class="topic-detail-content">' + content + '</div>';
                 }
             }).catch(function (err) {
-                el.innerHTML = '<p>Failed to load topic.</p>';
+                el.innerHTML = '<p style="color: var(--text-forest-light);">Content couldn\'t load. <a href="javascript:location.reload()">Refresh the page</a> to try again.</p>';
                 console.error(err);
             });
         })();

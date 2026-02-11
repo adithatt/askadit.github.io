@@ -26,9 +26,14 @@ async function loadSection(section) {
     const topicsList = document.getElementById('topicsList');
     topicsList.innerHTML = '<p style="text-align: center; color: var(--text-forest-light);">Loading…</p>';
 
+    const api = window.AskAditAPI;
+    if (!api) {
+        topicsList.innerHTML = '<p style="text-align: center; color: #d32f2f;">API not loaded. Ensure api.js is loaded.</p>';
+        return;
+    }
     let topics;
     try {
-        topics = await getTopics(section);
+        topics = await api.getTopics(section);
     } catch (err) {
         topicsList.innerHTML = '<p style="text-align: center; color: #d32f2f;">Failed to load. Check console.</p>';
         console.error(err);
@@ -118,9 +123,11 @@ function hideTopicForm() {
 }
 
 async function editTopic(section, topicId) {
+    const api = window.AskAditAPI;
+    if (!api) { alert('API not loaded.'); return; }
     let topic;
     try {
-        topic = await getTopic(section, topicId);
+        topic = await api.getTopic(section, topicId);
     } catch (err) {
         console.error(err);
         alert('Failed to load topic.');
@@ -149,6 +156,8 @@ async function editTopic(section, topicId) {
 async function saveTopic(e) {
     e.preventDefault();
     e.stopPropagation();
+    const api = window.AskAditAPI;
+    if (!api) { alert('API not loaded.'); return false; }
     
     if (currentSection === 'quotes') {
         const quote = document.getElementById('quote').value.trim();
@@ -160,7 +169,7 @@ async function saveTopic(e) {
         }
         
         const topic = {
-            id: editingTopicId || generateId(),
+            id: editingTopicId || api.generateId(),
             title: attribution,
             quote: quote,
             attribution: attribution,
@@ -169,9 +178,9 @@ async function saveTopic(e) {
         
         try {
             if (editingTopicId) {
-                await updateTopic(currentSection, editingTopicId, topic);
+                await api.updateTopic(currentSection, editingTopicId, topic);
             } else {
-                await addTopic(currentSection, topic);
+                await api.createTopic(currentSection, topic);
             }
         } catch (err) {
             console.error(err);
@@ -187,7 +196,7 @@ async function saveTopic(e) {
         }
         
         const topic = {
-            id: editingTopicId || generateId(),
+            id: editingTopicId || api.generateId(),
             title: title,
             image: document.getElementById('image').value.trim() || '',
             preview: document.getElementById('preview').value.trim() || '',
@@ -196,9 +205,9 @@ async function saveTopic(e) {
         
         try {
             if (editingTopicId) {
-                await updateTopic(currentSection, editingTopicId, topic);
+                await api.updateTopic(currentSection, editingTopicId, topic);
             } else {
-                await addTopic(currentSection, topic);
+                await api.createTopic(currentSection, topic);
             }
         } catch (err) {
             console.error(err);
@@ -214,8 +223,10 @@ async function saveTopic(e) {
 
 async function deleteTopicConfirm(section, topicId) {
     if (!confirm('Are you sure you want to delete this topic?')) return;
+    const api = window.AskAditAPI;
+    if (!api) { alert('API not loaded.'); return; }
     try {
-        await deleteTopic(section, topicId);
+        await api.deleteTopic(section, topicId);
         await loadSection(section);
     } catch (err) {
         console.error(err);

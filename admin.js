@@ -2,11 +2,10 @@
 let currentSection = 'countries';
 let editingTopicId = null;
 
-function initAdmin() {
+async function initAdmin() {
     if (!requireAuth()) return;
-    
-    loadSection('countries');
     updateNavLinks();
+    await loadSection('countries');
 }
 
 function updateNavLinks() {
@@ -19,15 +18,23 @@ function updateNavLinks() {
     });
 }
 
-function loadSection(section) {
+async function loadSection(section) {
     currentSection = section;
     updateNavLinks();
-    
-    // Hide form and show list when switching sections
     hideTopicForm();
-    
-    const topics = getTopics(section);
+
     const topicsList = document.getElementById('topicsList');
+    topicsList.innerHTML = '<p style="text-align: center; color: var(--text-forest-light);">Loading…</p>';
+
+    let topics;
+    try {
+        topics = await getTopics(section);
+    } catch (err) {
+        topicsList.innerHTML = '<p style="text-align: center; color: #d32f2f;">Failed to load. Check console.</p>';
+        console.error(err);
+        return;
+    }
+
     topicsList.innerHTML = '';
 
     if (topics.length === 0) {
@@ -110,22 +117,28 @@ function hideTopicForm() {
     editingTopicId = null;
 }
 
-function editTopic(section, topicId) {
-    const topic = getTopic(section, topicId);
+async function editTopic(section, topicId) {
+    let topic;
+    try {
+        topic = await getTopic(section, topicId);
+    } catch (err) {
+        console.error(err);
+        alert('Failed to load topic.');
+        return;
+    }
     if (!topic) return;
 
     editingTopicId = topicId;
     currentSection = section;
     document.getElementById('topicFormTitle').textContent = 'Edit Topic';
     
-    // Fill form fields
     if (section === 'quotes') {
-        document.getElementById('quote').value = topic.quote || '';
-        document.getElementById('attribution').value = topic.attribution || '';
+        document.getElementById('quote').value = topic.quote || topic.quote_text || '';
+        document.getElementById('attribution').value = topic.attribution || topic.author || '';
         document.getElementById('reflection').value = topic.reflection || '';
     } else {
         document.getElementById('title').value = topic.title || '';
-        document.getElementById('image').value = topic.image || '';
+        document.getElementById('image').value = topic.image || topic.photo || '';
         document.getElementById('preview').value = topic.preview || '';
         document.getElementById('content').value = topic.content || '';
     }
@@ -133,11 +146,10 @@ function editTopic(section, topicId) {
     showTopicForm();
 }
 
-function saveTopic(e) {
+async function saveTopic(e) {
     e.preventDefault();
     e.stopPropagation();
     
-    // Validate required fields based on section
     if (currentSection === 'quotes') {
         const quote = document.getElementById('quote').value.trim();
         const attribution = document.getElementById('attribution').value.trim();
@@ -155,10 +167,16 @@ function saveTopic(e) {
             reflection: document.getElementById('reflection').value.trim() || ''
         };
         
-        if (editingTopicId) {
-            updateTopic(currentSection, editingTopicId, topic);
-        } else {
-            addTopic(currentSection, topic);
+        try {
+            if (editingTopicId) {
+                await updateTopic(currentSection, editingTopicId, topic);
+            } else {
+                await addTopic(currentSection, topic);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Failed to save.');
+            return false;
         }
     } else {
         const title = document.getElementById('title').value.trim();
@@ -176,22 +194,32 @@ function saveTopic(e) {
             content: document.getElementById('content').value.trim() || ''
         };
         
-        if (editingTopicId) {
-            updateTopic(currentSection, editingTopicId, topic);
-        } else {
-            addTopic(currentSection, topic);
+        try {
+            if (editingTopicId) {
+                await updateTopic(currentSection, editingTopicId, topic);
+            } else {
+                await addTopic(currentSection, topic);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Failed to save.');
+            return false;
         }
     }
     
     hideTopicForm();
-    loadSection(currentSection);
+    await loadSection(currentSection);
     return false;
 }
 
-function deleteTopicConfirm(section, topicId) {
-    if (confirm('Are you sure you want to delete this topic?')) {
-        deleteTopic(section, topicId);
-        loadSection(section);
+async function deleteTopicConfirm(section, topicId) {
+    if (!confirm('Are you sure you want to delete this topic?')) return;
+    try {
+        await deleteTopic(section, topicId);
+        await loadSection(section);
+    } catch (err) {
+        console.error(err);
+        alert('Failed to delete.');
     }
 }
 

@@ -25,39 +25,41 @@
             <p class="section-description">A curated collection of meaningful, clever, or motivating quotes that have stuck with me, along with brief reflections on why they matter.</p>
         </div>
 
-        <div id="quotesList"></div>
+        <div id="quotesList">Loading…</div>
     </div>
 
-    <script src="content.js"></script>
     <script src="auth.js"></script>
+    <script src="db.js"></script>
+    <script src="content.js"></script>
     <script>
-        // Add admin link if logged in
-        if (isLoggedIn()) {
-            const navLinks = document.getElementById('navLinks');
-            const adminLink = document.createElement('li');
-            adminLink.innerHTML = '<a href="admin.html">Admin</a>';
-            navLinks.appendChild(adminLink);
-        }
-
-        // Load quotes
-        const topics = getTopics('quotes');
-        const quotesList = document.getElementById('quotesList');
-
-        if (topics.length === 0) {
-            quotesList.innerHTML = '<p style="text-align: center; color: var(--text-forest-light);">No quotes yet.</p>';
-        } else {
-            topics.forEach(topic => {
-                const card = document.createElement('div');
-                card.className = 'quote-card';
-                const preview = topic.reflection ? topic.reflection.substring(0, 150) + (topic.reflection.length > 150 ? '...' : '') : '';
-                card.innerHTML = `
-                    <div class="quote-text">"${topic.quote}"</div>
-                    <div class="quote-attribution">— ${topic.attribution}</div>
-                    ${preview ? `<div class="quote-reflection">${preview}</div>` : ''}
-                `;
-                quotesList.appendChild(card);
+        (function () {
+            if (isLoggedIn()) {
+                var navLinks = document.getElementById('navLinks');
+                var adminLink = document.createElement('li');
+                adminLink.innerHTML = '<a href="admin.html">Admin</a>';
+                navLinks.appendChild(adminLink);
+            }
+            var list = document.getElementById('quotesList');
+            getTopics('quotes').then(function (topics) {
+                list.innerHTML = '';
+                if (!topics.length) {
+                    list.innerHTML = '<p style="text-align: center; color: var(--text-forest-light);">No quotes yet.</p>';
+                    return;
+                }
+                topics.forEach(function (topic) {
+                    var card = document.createElement('div');
+                    card.className = 'quote-card';
+                    var q = (topic.quote || topic.quote_text || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+                    var attr = (topic.attribution || topic.author || '').replace(/</g, '&lt;');
+                    var preview = topic.reflection ? (topic.reflection.substring(0, 150) + (topic.reflection.length > 150 ? '...' : '')).replace(/</g, '&lt;') : '';
+                    card.innerHTML = '<div class="quote-text">"' + q + '"</div><div class="quote-attribution">— ' + attr + '</div>' + (preview ? '<div class="quote-reflection">' + preview + '</div>' : '');
+                    list.appendChild(card);
+                });
+            }).catch(function (err) {
+                list.innerHTML = '<p style="text-align: center; color: #d32f2f;">Failed to load quotes.</p>';
+                console.error(err);
             });
-        }
+        })();
     </script>
 </body>
 </html>

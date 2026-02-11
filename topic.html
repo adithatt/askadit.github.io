@@ -66,47 +66,44 @@
         <div id="topicDetail"></div>
     </div>
 
+    <script src="db.js"></script>
     <script src="content.js"></script>
     <script>
-        // Get section and topicId from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const section = urlParams.get('section');
-        const topicId = urlParams.get('id');
-
-        // Set back link
-        document.getElementById('backLink').href = section ? `${section}.html` : 'index.html';
-
-        if (section && topicId) {
-            const topic = getTopic(section, topicId);
-            if (topic) {
-                const topicDetail = document.getElementById('topicDetail');
-                
-                if (section === 'quotes') {
-                    topicDetail.innerHTML = `
-                        <div class="quote-card" style="border-left: 3px solid var(--text-forest); padding: 2rem;">
-                            <div class="quote-text">"${topic.quote}"</div>
-                            <div class="quote-attribution">— ${topic.attribution}</div>
-                            <div class="quote-reflection">${topic.reflection}</div>
-                        </div>
-                    `;
-                } else {
-                    let imageHtml = '';
-                    if (topic.image) {
-                        imageHtml = `<img src="${topic.image}" alt="${topic.title}" class="topic-detail-image">`;
-                    }
-                    
-                    topicDetail.innerHTML = `
-                        ${imageHtml}
-                        <h1 class="topic-detail-title">${topic.title}</h1>
-                        <div class="topic-detail-content">${topic.content || topic.preview}</div>
-                    `;
-                }
-            } else {
-                document.getElementById('topicDetail').innerHTML = '<p>Topic not found.</p>';
+        (function () {
+            var urlParams = new URLSearchParams(window.location.search);
+            var section = urlParams.get('section');
+            var topicId = urlParams.get('id');
+            document.getElementById('backLink').href = section ? section + '.html' : 'index.html';
+            var el = document.getElementById('topicDetail');
+            if (!section || !topicId) {
+                el.innerHTML = '<p>Invalid topic link.</p>';
+                return;
             }
-        } else {
-            document.getElementById('topicDetail').innerHTML = '<p>Invalid topic link.</p>';
-        }
+            el.innerHTML = 'Loading…';
+            getTopic(section, topicId).then(function (topic) {
+                if (!topic) {
+                    el.innerHTML = '<p>Topic not found.</p>';
+                    return;
+                }
+                var q = (topic.quote || topic.quote_text || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+                var attr = (topic.attribution || topic.author || '').replace(/</g, '&lt;');
+                var refl = (topic.reflection || '').replace(/</g, '&lt;');
+                var title = (topic.title || '').replace(/</g, '&lt;');
+                var content = (topic.content || topic.preview || '').replace(/</g, '&lt;');
+                if (section === 'quotes') {
+                    el.innerHTML = '<div class="quote-card" style="border-left: 3px solid var(--text-forest); padding: 2rem;">' +
+                        '<div class="quote-text">"' + q + '"</div>' +
+                        '<div class="quote-attribution">— ' + attr + '</div>' +
+                        '<div class="quote-reflection">' + refl + '</div></div>';
+                } else {
+                    var img = topic.image || topic.photo ? '<img src="' + (topic.image || topic.photo) + '" alt="' + title.replace(/"/g, '&quot;') + '" class="topic-detail-image">' : '';
+                    el.innerHTML = img + '<h1 class="topic-detail-title">' + title + '</h1><div class="topic-detail-content">' + content + '</div>';
+                }
+            }).catch(function (err) {
+                el.innerHTML = '<p>Failed to load topic.</p>';
+                console.error(err);
+            });
+        })();
     </script>
 </body>
 </html>

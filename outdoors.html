@@ -25,41 +25,41 @@
             <p class="section-description">Thoughts on nature, hiking, landscapes, weather, and outdoor experiences. Emphasis on wonder, practical wisdom, and appreciation for the natural world.</p>
         </div>
 
-        <div class="entries-grid" id="topicsGrid"></div>
+        <div class="entries-grid" id="topicsGrid">Loading…</div>
     </div>
 
-    <script src="content.js"></script>
     <script src="auth.js"></script>
+    <script src="db.js"></script>
+    <script src="content.js"></script>
     <script>
-        // Add admin link if logged in
-        if (isLoggedIn()) {
-            const navLinks = document.getElementById('navLinks');
-            const adminLink = document.createElement('li');
-            adminLink.innerHTML = '<a href="admin.html">Admin</a>';
-            navLinks.appendChild(adminLink);
-        }
-
-        // Load topics
-        const topics = getTopics('outdoors');
-        const topicsGrid = document.getElementById('topicsGrid');
-
-        if (topics.length === 0) {
-            topicsGrid.innerHTML = '<p style="text-align: center; color: var(--text-forest-light);">No topics yet.</p>';
-        } else {
-            topics.forEach(topic => {
-                const card = document.createElement('a');
-                card.href = `topic.html?section=outdoors&id=${topic.id}`;
-                card.className = 'entry-card';
-                card.innerHTML = `
-                    ${topic.image ? `<img src="${topic.image}" alt="${topic.title}" class="entry-image">` : ''}
-                    <div class="entry-content">
-                        <h3 class="entry-title">${topic.title}</h3>
-                        ${topic.preview ? `<p class="entry-preview">${topic.preview}</p>` : ''}
-                    </div>
-                `;
-                topicsGrid.appendChild(card);
+        (function () {
+            if (isLoggedIn()) {
+                var navLinks = document.getElementById('navLinks');
+                var adminLink = document.createElement('li');
+                adminLink.innerHTML = '<a href="admin.html">Admin</a>';
+                navLinks.appendChild(adminLink);
+            }
+            var grid = document.getElementById('topicsGrid');
+            getTopics('outdoors').then(function (topics) {
+                grid.innerHTML = '';
+                if (!topics.length) {
+                    grid.innerHTML = '<p style="text-align: center; color: var(--text-forest-light);">No topics yet.</p>';
+                    return;
+                }
+                topics.forEach(function (topic) {
+                    var card = document.createElement('a');
+                    card.href = 'topic.html?section=outdoors&id=' + encodeURIComponent(topic.id);
+                    card.className = 'entry-card';
+                    card.innerHTML = (topic.image ? '<img src="' + topic.image + '" alt="' + (topic.title || '').replace(/"/g, '&quot;') + '" class="entry-image">' : '') +
+                        '<div class="entry-content"><h3 class="entry-title">' + (topic.title || '').replace(/</g, '&lt;') + '</h3>' +
+                        (topic.preview ? '<p class="entry-preview">' + topic.preview.replace(/</g, '&lt;') + '</p>' : '') + '</div>';
+                    grid.appendChild(card);
+                });
+            }).catch(function (err) {
+                grid.innerHTML = '<p style="text-align: center; color: #d32f2f;">Failed to load topics.</p>';
+                console.error(err);
             });
-        }
+        })();
     </script>
 </body>
 </html>

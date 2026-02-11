@@ -271,10 +271,11 @@
     </div>
 
     <script src="auth.js"></script>
+    <script src="db.js"></script>
     <script src="content.js"></script>
     <script src="admin.js"></script>
     <script>
-        initAdmin();
+        document.addEventListener('DOMContentLoaded', function () { initAdmin(); });
     </script>
 </body>
 </html>

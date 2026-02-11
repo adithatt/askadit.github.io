@@ -2,8 +2,6 @@ import Link from "next/link";
 import Nav from "@/components/Nav";
 import { getTopics } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
-
 export default function CountriesPage() {
   const topics = getTopics("countries");
   return (
@@ -27,7 +25,7 @@ export default function CountriesPage() {
             topics.map((topic) => (
               <Link
                 key={topic.id}
-                href={`/topic/countries/${topic.id}`}
+                href={`/topic/countries/${topic.id}/`}
                 className="entry-card"
               >
                 {topic.photo ? (

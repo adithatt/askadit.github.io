@@ -1,12 +1,26 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
-import { getTopic } from "@/lib/db";
+import { getTopic, getTopics, getQuotes } from "@/lib/db";
 import { getQuote } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
+const SECTIONS = ["countries", "outdoors", "guides", "quotes"] as const;
 
-const SECTIONS: Record<string, string> = {
+export function generateStaticParams() {
+  const params: { section: string; id: string }[] = [];
+  for (const section of SECTIONS) {
+    if (section === "quotes") {
+      const quotes = getQuotes();
+      quotes.forEach((q) => params.push({ section: "quotes", id: q.id }));
+    } else {
+      const topics = getTopics(section);
+      topics.forEach((t) => params.push({ section, id: t.id }));
+    }
+  }
+  return params;
+}
+
+const SECTIONS_MAP: Record<string, string> = {
   countries: "countries",
   outdoors: "outdoors",
   guides: "guides",
@@ -19,7 +33,7 @@ export default async function TopicPage({
   params: Promise<{ section: string; id: string }>;
 }) {
   const { section, id } = await params;
-  if (!SECTIONS[section]) notFound();
+  if (!SECTIONS_MAP[section]) notFound();
 
   if (section === "quotes") {
     const quote = getQuote(id);

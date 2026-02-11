@@ -18,10 +18,14 @@ export default function LoginPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
-    });
+    }).catch(() => null);
+    if (!res?.ok) {
+      setError("Admin is only available when running locally (npm run dev).");
+      return;
+    }
     const data = await res.json();
     if (data.success) {
-      router.push("/admin");
+      router.push("/admin/");
       router.refresh();
     } else {
       setError("Invalid username or password");

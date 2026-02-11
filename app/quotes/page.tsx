@@ -2,8 +2,6 @@ import Link from "next/link";
 import Nav from "@/components/Nav";
 import { getQuotes } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
-
 export default function QuotesPage() {
   const quotes = getQuotes();
   return (
@@ -27,7 +25,7 @@ export default function QuotesPage() {
             quotes.map((quote) => (
               <Link
                 key={quote.id}
-                href={`/topic/quotes/${quote.id}`}
+                href={`/topic/quotes/${quote.id}/`}
                 className="quote-card"
                 style={{ display: "block", textDecoration: "none", color: "inherit" }}
               >

@@ -7,8 +7,9 @@ export default function Nav({ showAdmin: forceShowAdmin }: { showAdmin?: boolean
   const [authenticated, setAuthenticated] = useState(false);
   useEffect(() => {
     fetch("/api/auth/session")
-      .then((r) => r.json())
-      .then((data) => setAuthenticated(!!data.authenticated));
+      .then((r) => (r.ok ? r.json() : { authenticated: false }))
+      .then((data) => setAuthenticated(!!data?.authenticated))
+      .catch(() => setAuthenticated(false));
   }, []);
   const showAdmin = forceShowAdmin ?? authenticated;
   return (

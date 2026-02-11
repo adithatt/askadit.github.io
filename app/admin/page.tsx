@@ -38,13 +38,13 @@ export default function AdminPage() {
 
   useEffect(() => {
     fetch("/api/auth/session")
-      .then((r) => r.json())
+      .then((r) => (r.ok ? r.json() : { authenticated: false }))
       .then((data) => {
-        setAuthenticated(data.authenticated);
-        if (!data.authenticated) {
-          router.replace("/login");
-        }
-      });
+        const ok = !!data?.authenticated;
+        setAuthenticated(ok);
+        if (!ok) router.replace("/login/");
+      })
+      .catch(() => setAuthenticated(false));
   }, [router]);
 
   useEffect(() => {

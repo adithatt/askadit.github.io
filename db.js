@@ -128,35 +128,52 @@ function seedDefaultData(database) {
     qstmt.free();
 }
 
+var dbInitPromise = null;
+
 async function initDb() {
     if (db) return db;
-    SQL = await loadSqlJs();
+    if (dbInitPromise) return dbInitPromise;
     
-    var tryGistFirst = typeof window.hasGistConfig === 'function' && window.hasGistConfig() && typeof window.syncFromGist === 'function';
-    if (tryGistFirst) {
-        try {
-            await window.syncFromGist();
-            var saved = await loadDbFromIndexedDB();
-            if (saved && saved.length) {
-                db = new SQL.Database(saved);
-                return db;
-            }
-        } catch (err) {
-            console.warn('Failed to sync from Gist, using local DB:', err);
+    dbInitPromise = (async function() {
+        SQL = await loadSqlJs();
+        
+        var saved = await loadDbFromIndexedDB();
+        if (saved && saved.length) {
+            db = new SQL.Database(saved);
+            syncFromGistInBackground();
+            return db;
         }
-    }
-    
-    const saved = await loadDbFromIndexedDB();
-    if (saved && saved.length) {
-        db = new SQL.Database(saved);
-    } else {
+        
         db = new SQL.Database();
         createSchema(db);
         migrateFromLocalStorage(db);
         seedDefaultData(db);
         await persistDb();
+        
+        syncFromGistInBackground();
+        return db;
+    })();
+    
+    return dbInitPromise;
+}
+
+function syncFromGistInBackground() {
+    if (typeof window.hasGistConfig === 'function' && window.hasGistConfig() && typeof window.syncFromGist === 'function') {
+        setTimeout(function() {
+            window.syncFromGist().then(function() {
+                return loadDbFromIndexedDB();
+            }).then(function(saved) {
+                if (saved && saved.length && db && SQL) {
+                    try {
+                        db.close();
+                    } catch(e) {}
+                    db = new SQL.Database(saved);
+                }
+            }).catch(function(err) {
+                console.warn('Background sync failed:', err);
+            });
+        }, 1000);
     }
-    return db;
 }
 
 function migrateFromLocalStorage(database) {
@@ -192,10 +209,12 @@ function persistDb() {
     const data = db.export();
     var p = saveDbToIndexedDB(data);
     if (typeof window.syncToGist === 'function' && typeof window.hasGistConfig === 'function' && window.hasGistConfig()) {
-        p = p.then(function () {
-            return window.syncToGist().catch(function (err) {
-                console.warn('Sync to Gist failed:', err);
-            });
+        p.then(function () {
+            setTimeout(function() {
+                window.syncToGist().catch(function (err) {
+                    console.warn('Sync to Gist failed:', err);
+                });
+            }, 100);
         });
     }
     return p;
